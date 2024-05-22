@@ -1,0 +1,55 @@
+document.addEventListener('DOMContentLoaded', () => {
+    const apiKey = 'YOUR_OPENWEATHERMAP_API_KEY';
+    const weatherInfoDiv = document.getElementById('weather-info');
+    const locationNameElem = document.getElementById('location-name');
+    const temperatureElem = document.getElementById('temperature');
+    const weatherDescriptionElem = document.getElementById('weather-description');
+    const fetchWeatherButton = document.getElementById('fetch-weather');
+    const locationInput = document.getElementById('location-input');
+
+    fetchWeatherButton.addEventListener('click', () => {
+        const location = locationInput.value;
+        if (location) {
+            fetchWeather(location);
+        }
+    });
+
+    function fetchWeather(location) {
+        fetch(`https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${apiKey}&units=metric`)
+            .then(response => response.json())
+            .then(data => {
+                displayWeather(data);
+            })
+            .catch(error => {
+                console.error('Error fetching weather data:', error);
+                weatherInfoDiv.innerHTML = '<p>Error fetching weather data. Please try again.</p>';
+            });
+    }
+
+    function displayWeather(data) {
+        if (data.cod === '404') {
+            weatherInfoDiv.innerHTML = '<p>Location not found. Please try again.</p>';
+            return;
+        }
+
+        locationNameElem.textContent = `${data.name}, ${data.sys.country}`;
+        temperatureElem.textContent = `Temperature: ${data.main.temp}°C`;
+        weatherDescriptionElem.textContent = `Weather: ${data.weather[0].description}`;
+    }
+
+    // Fetch weather based on user's location
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+            const { latitude, longitude } = position.coords;
+            fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric`)
+                .then(response => response.json())
+                .then(data => {
+                    displayWeather(data);
+                })
+                .catch(error => {
+                    console.error('Error fetching weather data:', error);
+                    weatherInfoDiv.innerHTML = '<p>Error fetching weather data. Please try again.</p>';
+                });
+        });
+    }
+});
